@@ -48,7 +48,11 @@ public class Game
 
             if (IsKeyPressed(KEY_X))
                 {
+                    if(turn == false)
                     this.placeChip(Chip.PLAYER_1, this.zeigerX);
+                    else
+                    this.placeChip(Chip.PLAYER_2, this.zeigerX);
+                    turn = !turn;
                 }
             
             
