@@ -1,12 +1,17 @@
 import static com.raylib.Colors.*;
 import static com.raylib.Raylib.*;
 
+
 public class Game
 {
     Chip[][] board;
     boolean turn;
 
     int CHIP_SIZE = 10;
+
+    int zeigerX;
+
+    int frame = 0;
 
     enum Chip
     {
@@ -31,6 +36,25 @@ public class Game
                 this.updateBoard();
             }
 
+            if (IsKeyPressed(KEY_LEFT))
+            {
+                this.zeigerX -= 1;
+            }
+
+            if (IsKeyPressed(KEY_RIGHT))
+            {
+                this.zeigerX += 1;
+            }
+
+            if (IsKeyPressed(KEY_X))
+                {
+                    this.placeChip(Chip.PLAYER_1, this.zeigerX);
+                }
+            
+            
+            if (frame % 7 == 1)
+            updateBoard();
+                
             BeginDrawing();
             ClearBackground(BLACK);
             for (int y = 5 - 1; y >= 0; y--)
@@ -38,15 +62,18 @@ public class Game
                 for (int x = 0; x < 6; x++)
                 {
                     if (this.board[x][y] == Chip.EMPTY)
-                    DrawRectangle(x*40, y * 40,CHIP_SIZE ,CHIP_SIZE, WHITE);
+                    DrawRectangle(x*40, y * 40 + 40,CHIP_SIZE ,CHIP_SIZE, WHITE);
                     else if (this.board[x][y] == Chip.PLAYER_1)
-                    DrawRectangle(x*40, y * 40,CHIP_SIZE ,CHIP_SIZE, BLUE);
+                    DrawRectangle(x*40, y * 40 + 40,CHIP_SIZE ,CHIP_SIZE, BLUE);
                     else
-                    DrawRectangle(x*40, y * 40,CHIP_SIZE ,CHIP_SIZE, RED);
+                    DrawRectangle(x*40, y * 40 + 40,CHIP_SIZE ,CHIP_SIZE, RED);
                     
                 }
             }
+            DrawRectangle(40 * zeigerX, 10, CHIP_SIZE, CHIP_SIZE, BEIGE);
             EndDrawing();
+
+            this.frame++;
         }
 
         CloseWindow();
@@ -62,6 +89,7 @@ public class Game
                 this.board[x][y] = Chip.EMPTY;
             }
         }
+        this.zeigerX = 1;
     }
 
     public void resetRound(){}
