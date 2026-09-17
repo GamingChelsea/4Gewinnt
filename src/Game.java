@@ -13,6 +13,11 @@ public class Game
 
     int frame = 0;
 
+    int lastx;
+    int lasty;
+
+    boolean dirty = false;
+
     enum Chip
     {
         EMPTY,
@@ -38,26 +43,26 @@ public class Game
 
             if (IsKeyPressed(KEY_LEFT))
             {
-                this.zeigerX -= 1;
+                this.zeigerX = Math.clamp(this.zeigerX - 1, 0, 5);
             }
 
             if (IsKeyPressed(KEY_RIGHT))
             {
-                this.zeigerX += 1;
+                this.zeigerX = Math.clamp(this.zeigerX + 1, 0, 5);
             }
 
-            if (IsKeyPressed(KEY_X))
+            if (IsKeyPressed(KEY_X) && !this.dirty)
                 {
                     if(turn == false)
                     this.placeChip(Chip.PLAYER_1, this.zeigerX);
                     else
                     this.placeChip(Chip.PLAYER_2, this.zeigerX);
                     turn = !turn;
+                    this.dirty = true;
+                    this.lastx = this.zeigerX;
+                    updateBoard();
                 }
             
-            
-            if (frame % 7 == 1)
-            updateBoard();
                 
             BeginDrawing();
             ClearBackground(BLACK);
@@ -102,23 +107,80 @@ public class Game
 
     public void updateBoard()
     {
-       for (int y = 5 - 1; y >= 0; y--)
+        while (dirty)
         {
-            for (int x = 0; x < 6; x++)
+            for (int y = 0; y < 5; y++)
             {
-                if (y != 4)
+                // theoretisch warten
+                // System.out.println(y);
+                if (y == 4)
                 {
-                    if (this.board[x][y + 1] == Chip.EMPTY)
-                    {
-                        this.board[x][y + 1] = this.board[x][y];
-                        this.board[x][y] = Chip.EMPTY;
-                    }
+                    lasty = 4;
+                    break;
+                }
+
+                if (this.board[this.zeigerX][y + 1] == Chip.EMPTY){
+                    // System.out.println("Frei");
+                    this.board[this.zeigerX][y + 1] = this.board[this.zeigerX][y];
+                    this.board[this.zeigerX][y] = Chip.EMPTY;
+                } 
+                else
+                {
+                    // System.out.println("Belegt");
+                    lasty = y;
+                    break;
                 }
             }
-        } 
+            this.dirty = false;
+        }
+        checkWinner();
     }
 
-    public void checkWinner(){}
+    public void checkWinner()
+    {
+        int streak = 0;
+        Chip currentChip = this.board[this.zeigerX][this.lasty];
+        System.out.println(lasty);
+        // Horizontal
+        for (int x = 0; x < 6; x++)
+        {
+            if (this.board[x][this.lasty] == currentChip)
+            {
+                streak++;
+                // System.out.println("CURRENT STREAK" + streak);
+            }
+            else if (!(streak >= 4))
+            {
+                streak = 0;
+                // System.out.println("STREAK VERLOREN");
+            }     
+        }
+        if (streak >= 4)
+        {
+            // System.out.println("GEWONNEN");
+        }
+        
+        // Vertical
+        for (int y = 0; y < 5; y++)
+        {
+            if (this.board[this.lastx][y] == currentChip)
+            {
+                streak++;
+                // System.out.println("CURRENT STREAK" + streak);
+            }
+            else if (!(streak >= 4))
+            {
+                streak = 0;
+                // System.out.println("STREAK VERLOREN");
+            }     
+        }
+        if (streak >= 4)
+        {
+            // System.out.println("GEWONNEN");
+        }
+
+        // Diagonal
+    }
 
     public void placeChip(Chip player, int pos)
     {
