@@ -18,6 +18,8 @@ public class Game
 
     boolean dirty = false;
 
+    Player[] players = new Player[2];
+
     enum Chip
     {
         EMPTY,
@@ -80,6 +82,10 @@ public class Game
                 }
             }
             DrawRectangle(40 * zeigerX, 10, CHIP_SIZE, CHIP_SIZE, BEIGE);
+
+            // Score
+            DrawText(Integer.toString(players[0].getWins()),10,400,24, BLUE);
+            DrawText(Integer.toString(players[1].getWins()),10,450,24, RED);
             EndDrawing();
 
             this.frame++;
@@ -99,6 +105,9 @@ public class Game
             }
         }
         this.zeigerX = 1;
+
+        players[0] = new Player("Beul");
+        players[1] = new Player("Fred");
     }
 
     public void resetRound(){}
@@ -140,6 +149,15 @@ public class Game
     {
         int streak = 0;
         Chip currentChip = this.board[this.zeigerX][this.lasty];
+        String playerString = "";
+        if (currentChip == Chip.PLAYER_1)
+        {
+            playerString = players[0].getName();
+        }
+        else if (currentChip == Chip.PLAYER_2)
+        {
+            playerString = players[1].getName();
+        }
         System.out.println(lasty);
         // Horizontal
         for (int x = 0; x < 6; x++)
@@ -157,7 +175,15 @@ public class Game
         }
         if (streak >= 4)
         {
-            // System.out.println("GEWONNEN");
+            System.out.println(playerString + " hat gewonnen!");
+            if (currentChip == Chip.PLAYER_1)
+            {
+                players[0].setWins(players[0].getWins() + 1);
+            }
+            else if (currentChip == Chip.PLAYER_2)
+            {
+                players[1].setWins(players[1].getWins() + 1);
+            }
         }
         
         // Vertical
@@ -176,10 +202,34 @@ public class Game
         }
         if (streak >= 4)
         {
-            // System.out.println("GEWONNEN");
+            System.out.println(playerString + " hat gewonnen!");
+            if (currentChip == Chip.PLAYER_1)
+            {
+                players[0].setWins(players[0].getWins() + 1);
+            }
+            else if (currentChip == Chip.PLAYER_2)
+            {
+                players[1].setWins(players[1].getWins() + 1);
+            }
         }
 
         // Diagonal
+        /*
+        int streak = 0;
+        Chip currentChip = this.board[this.zeigerX][this.lasty];
+        int x = 2, y = 1;
+
+        for(int i = 0; i < 8; i++)
+        {
+            x = x + (-1 * i);
+            y = y + (1 * i);
+            x = Math.clamp(x, 0, 5);
+            x = Math.clamp(y, 0, 4);
+            System.out.println("x: " + x + "\ny: " + y);
+            
+        }
+        */
+
     }
 
     public void placeChip(Chip player, int pos)

@@ -3,6 +3,11 @@ public class Player
     int wins;
     String name;
 
+    Player(String name)
+    {
+        this.name = name;
+    }
+
     public int getWins()
     {
         return wins;
