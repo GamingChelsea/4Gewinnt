@@ -1,21 +1,22 @@
-name: Build Windows Application
+name: Build and Nightly Release
 
 on:
   push:
     branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
 
     steps:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
-      - name: JDK einrichten (Java 22 für Jaylib / Panama FFM)
+      - name: JDK einrichten (Java 22)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -25,46 +26,44 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path bin
-          
-          # Alle Java-Dateien im src-Ordner ermitteln
           $sources = Get-ChildItem -Path src -Filter *.java -Recurse | Select-Object -ExpandProperty FullName
           
           if (-not $sources) {
-            Write-Error "Keine Java-Quellcodedateien im Ordner 'src' gefunden."
+            Write-Error "Keine Java-Dateien in 'src' gefunden."
           }
 
-          # Kompilieren mit Einbindung der Bibliotheken aus lib/
           javac -encoding UTF-8 -cp "lib/*" -d bin $sources
 
-      - name: JAR und Startskript erstellen
+      - name: JAR und Startskript packen
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
           
-          # Manifest für die Ausführung definieren (Main-Class anpassen, falls abweichend)
           @"
           Manifest-Version: 1.0
           Main-Class: Game
           Class-Path: lib/jaylib-6.0.1-0.jar
           "@ | Set-Content -Path manifest.txt
 
-          # JAR-Archiv packen
           jar cfm dist/4Gewinnt.jar manifest.txt -C bin .
 
-          # lib-Verzeichnis kopieren
           if (Test-Path lib) {
             Copy-Item -Path lib -Destination dist/lib -Recurse
           }
 
-          # Windows-Starter (.bat) erstellen (inkl. Native Access Flags für Jaylib)
           @"
           @echo off
           start "" javaw --enable-native-access=ALL-UNNAMED -jar 4Gewinnt.jar
           "@ | Set-Content -Path dist/Start_4Gewinnt.bat
 
-      - name: Windows-Build als Artefakt hochladen
-        uses: actions/upload-artifact@v4
+          # Als ZIP-Archiv für das Release schnüren
+          Compress-Archive -Path dist/* -DestinationPath 4Gewinnt-Windows-nightly.zip -Force
+
+      - name: Nightly Release erstellen oder aktualisieren
+        uses: softprops/action-gh-release@v2
         with:
-          name: 4Gewinnt-Windows
-          path: dist/
-          retention-days: 72
+          tag_name: nightly
+          name: "Nightly Build"
+          body: "Automatischer Build vom ${{ github.sha }}."
+          prerelease: true
+          files: 4Gewinnt-Windows-nightly.zip
