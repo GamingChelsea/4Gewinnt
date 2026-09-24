@@ -1,0 +1,68 @@
+name: Build and Nightly Release
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: JDK einrichten (Java 22)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '22'
+
+      - name: Projekt kompilieren
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path bin
+          $sources = Get-ChildItem -Path src -Filter *.java -Recurse | Select-Object -ExpandProperty FullName
+          
+          if (-not $sources) {
+            Write-Error "Keine Java-Dateien in 'src' gefunden."
+          }
+
+          javac -encoding UTF-8 -cp "lib/*" -d bin $sources
+
+      - name: JAR und Startskript packen
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          
+          @"
+          Manifest-Version: 1.0
+          Main-Class: Game
+          Class-Path: lib/jaylib-6.0.1-0.jar
+          "@ | Set-Content -Path manifest.txt
+
+          jar cfm dist/4Gewinnt.jar manifest.txt -C bin .
+
+          if (Test-Path lib) {
+            Copy-Item -Path lib -Destination dist/lib -Recurse
+          }
+
+          @"
+          @echo off
+          start "" javaw --enable-native-access=ALL-UNNAMED -jar 4Gewinnt.jar
+          "@ | Set-Content -Path dist/Start_4Gewinnt.bat
+
+          Compress-Archive -Path dist/* -DestinationPath 4Gewinnt-Windows-nightly.zip -Force
+
+      - name: Nightly Release erstellen oder aktualisieren
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: "Nightly Build"
+          body: "Automatischer Build vom ${{ github.sha }}."
+          prerelease: true
+          files: 4Gewinnt-Windows-nightly.zip
