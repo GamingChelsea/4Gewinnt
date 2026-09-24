@@ -1,91 +1,91 @@
 import static com.raylib.Colors.*;
 import static com.raylib.Raylib.*;
 
-
-public class Game
-{
+public class Game {
     Chip[][] board;
     boolean turn;
 
+    int boardWidth = 10;
+    int boardHeight = 12;
+
     int CHIP_SIZE = 10;
 
-    int zeigerX;
+    int zeigerX = 0;
 
     int frame = 0;
 
     int lastx;
     int lasty;
 
+    int current_streak = 0;
+
     boolean dirty = false;
 
     Player[] players = new Player[2];
 
-    enum Chip
-    {
+    enum Chip {
         EMPTY,
         PLAYER_1,
         PLAYER_2,
+        Test_1,
+        Test_2,
     }
 
-    Game(){}
+    Game() {
+    }
 
-    public void run()
-    {
+    private void run() {
         InitWindow(512, 512, "Demo");
         SetTargetFPS(60);
 
         this.init();
 
-        while (!WindowShouldClose())
-        {
-            if (IsKeyPressed(KEY_SPACE))
-            {
-                this.updateBoard();
+        while (!WindowShouldClose()) {
+            if (IsKeyPressed(KEY_SPACE)) {
+                this.checkWinner();
             }
 
-            if (IsKeyPressed(KEY_LEFT))
-            {
-                this.zeigerX = Math.clamp(this.zeigerX - 1, 0, 5);
+            if (IsKeyPressed(KEY_LEFT)) {
+                this.zeigerX = Math.clamp(this.zeigerX - 1, 0, this.board.length - 1);
             }
 
-            if (IsKeyPressed(KEY_RIGHT))
-            {
-                this.zeigerX = Math.clamp(this.zeigerX + 1, 0, 5);
+            if (IsKeyPressed(KEY_RIGHT)) {
+                this.zeigerX = Math.clamp(this.zeigerX + 1, 0, this.board.length - 1);
             }
 
-            if (IsKeyPressed(KEY_X) && !this.dirty)
-                {
-                    if(turn == false)
+            if (IsKeyPressed(KEY_X) && !this.dirty) {
+                if (turn == false)
                     this.placeChip(Chip.PLAYER_1, this.zeigerX);
-                    else
+                else
                     this.placeChip(Chip.PLAYER_2, this.zeigerX);
-                    turn = !turn;
-                    this.dirty = true;
-                    this.lastx = this.zeigerX;
-                    updateBoard();
-                }
-            
-                
+                turn = !turn;
+                this.dirty = true;
+                this.lastx = this.zeigerX;
+                updateBoard();
+            }
+
             BeginDrawing();
             ClearBackground(BLACK);
-            for (int y = 5 - 1; y >= 0; y--)
-            {
-                for (int x = 0; x < 6; x++)
-                {
+            for (int y = this.board[0].length - 1; y >= 0; y--) {
+                for (int x = 0; x < this.board.length; x++) {
                     if (this.board[x][y] == Chip.EMPTY)
-                    DrawRectangle(x*40, y * 40 + 40,CHIP_SIZE ,CHIP_SIZE, WHITE);
+                        DrawRectangle(x * 40, y * 40 + 40, CHIP_SIZE, CHIP_SIZE, WHITE);
                     else if (this.board[x][y] == Chip.PLAYER_1)
-                    DrawRectangle(x*40, y * 40 + 40,CHIP_SIZE ,CHIP_SIZE, BLUE);
+                        DrawRectangle(x * 40, y * 40 + 40, CHIP_SIZE, CHIP_SIZE, BLUE);
+                    else if (this.board[x][y] == Chip.PLAYER_2)
+                        DrawRectangle(x * 40, y * 40 + 40, CHIP_SIZE, CHIP_SIZE, RED);
+                    else if (this.board[x][y] == Chip.Test_1)
+                        DrawRectangle(x * 40, y * 40 + 40, CHIP_SIZE, CHIP_SIZE, GREEN);
                     else
-                    DrawRectangle(x*40, y * 40 + 40,CHIP_SIZE ,CHIP_SIZE, RED);
-                    
+                        DrawRectangle(x * 40, y * 40 + 40, CHIP_SIZE, CHIP_SIZE, ORANGE);
+
                 }
             }
             DrawRectangle(40 * zeigerX, 10, CHIP_SIZE, CHIP_SIZE, BEIGE);
 
             // Score
-            DrawText(Integer.toString(players[0].getWins()),10,400,24, BLUE);
-            DrawText(Integer.toString(players[1].getWins()),10,450,24, RED);
+            DrawText(Integer.toString(players[0].getWins()), 10, 400, 24, BLUE);
+            DrawText(Integer.toString(players[1].getWins()), 10, 450, 24, RED);
             EndDrawing();
 
             this.frame++;
@@ -94,47 +94,38 @@ public class Game
         CloseWindow();
     }
 
-    public void init()
-    {
-        board = new Chip[6][5];
-        for (int y = 5 - 1; y >= 0; y--)
-        {
-            for (int x = 0; x < 6; x++)
-            {
+    private void init() {
+        board = new Chip[boardWidth][boardHeight];
+        for (int y = this.board[0].length - 1; y >= 0; y--) {
+            for (int x = 0; x < this.board.length; x++) {
                 this.board[x][y] = Chip.EMPTY;
             }
         }
-        this.zeigerX = 1;
-
         players[0] = new Player("Beul");
         players[1] = new Player("Fred");
     }
 
-    public void resetRound(){}
+    private void resetRound() {
+    }
 
-    public void resetGame(){}
+    private void resetGame() {
+    }
 
-    public void updateBoard()
-    {
-        while (dirty)
-        {
-            for (int y = 0; y < 5; y++)
-            {
+    private void updateBoard() {
+        while (dirty) {
+            for (int y = 0; y < this.board[0].length; y++) {
                 // theoretisch warten
                 // System.out.println(y);
-                if (y == 4)
-                {
-                    lasty = 4;
+                if (y == this.board[0].length - 1) {
+                    lasty = this.board[0].length - 1;
                     break;
                 }
 
-                if (this.board[this.zeigerX][y + 1] == Chip.EMPTY){
+                if (this.board[this.zeigerX][y + 1] == Chip.EMPTY) {
                     // System.out.println("Frei");
                     this.board[this.zeigerX][y + 1] = this.board[this.zeigerX][y];
                     this.board[this.zeigerX][y] = Chip.EMPTY;
-                } 
-                else
-                {
+                } else {
                     // System.out.println("Belegt");
                     lasty = y;
                     break;
@@ -145,108 +136,97 @@ public class Game
         checkWinner();
     }
 
-    public void checkWinner()
-    {
-        int streak = 0;
-        Chip currentChip = this.board[this.zeigerX][this.lasty];
-        String playerString = "";
-        if (currentChip == Chip.PLAYER_1)
-        {
-            playerString = players[0].getName();
-        }
-        else if (currentChip == Chip.PLAYER_2)
-        {
-            playerString = players[1].getName();
-        }
-        System.out.println(lasty);
-        // Horizontal
-        for (int x = 0; x < 6; x++)
-        {
-            if (this.board[x][this.lasty] == currentChip)
-            {
-                streak++;
-                // System.out.println("CURRENT STREAK" + streak);
-            }
-            else if (!(streak >= 4))
-            {
-                streak = 0;
-                // System.out.println("STREAK VERLOREN");
-            }     
-        }
-        if (streak >= 4)
-        {
-            System.out.println(playerString + " hat gewonnen!");
-            if (currentChip == Chip.PLAYER_1)
-            {
-                players[0].setWins(players[0].getWins() + 1);
-            }
-            else if (currentChip == Chip.PLAYER_2)
-            {
-                players[1].setWins(players[1].getWins() + 1);
-            }
-        }
-        
-        // Vertical
-        for (int y = 0; y < 5; y++)
-        {
-            if (this.board[this.lastx][y] == currentChip)
-            {
-                streak++;
-                // System.out.println("CURRENT STREAK" + streak);
-            }
-            else if (!(streak >= 4))
-            {
-                streak = 0;
-                // System.out.println("STREAK VERLOREN");
-            }     
-        }
-        if (streak >= 4)
-        {
-            System.out.println(playerString + " hat gewonnen!");
-            if (currentChip == Chip.PLAYER_1)
-            {
-                players[0].setWins(players[0].getWins() + 1);
-            }
-            else if (currentChip == Chip.PLAYER_2)
-            {
-                players[1].setWins(players[1].getWins() + 1);
-            }
-        }
+    private void checkWinner() {
+        // int streak = 0;
+        // Chip currentChip = this.board[this.zeigerX][this.lasty];
+        // String playerString = "";
+        // if (currentChip == Chip.PLAYER_1) {
+        // playerString = players[0].getName();
+        // } else if (currentChip == Chip.PLAYER_2) {
+        // playerString = players[1].getName();
+        // }
+        // System.out.println(lasty);
+        // // Horizontal
+        // for (int x = 0; x < this.board.length; x++) {
+        // if (this.board[x][this.lasty] == currentChip) {
+        // streak++;
+        // // System.out.println("CURRENT STREAK" + streak);
+        // } else if (!(streak >= 4)) {
+        // streak = 0;
+        // // System.out.println("STREAK VERLOREN");
+        // }
+        // }
+        // if (streak >= 4) {
+        // System.out.println(playerString + " hat gewonnen!");
+        // if (currentChip == Chip.PLAYER_1) {
+        // players[0].setWins(players[0].getWins() + 1);
+        // } else if (currentChip == Chip.PLAYER_2) {
+        // players[1].setWins(players[1].getWins() + 1);
+        // }
+        // }
+
+        // // Vertical
+        // for (int y = 0; y < this.board[0].length; y++) {
+        // if (this.board[this.lastx][y] == currentChip) {
+        // streak++;
+        // // System.out.println("CURRENT STREAK" + streak);
+        // } else if (!(streak >= 4)) {
+        // streak = 0;
+        // // System.out.println("STREAK VERLOREN");
+        // }
+        // }
+        // if (streak >= 4) {
+        // System.out.println(playerString + " hat gewonnen!");
+        // if (currentChip == Chip.PLAYER_1) {
+        // players[0].setWins(players[0].getWins() + 1);
+        // } else if (currentChip == Chip.PLAYER_2) {
+        // players[1].setWins(players[1].getWins() + 1);
+        // }
+        // }
 
         // Diagonal
-        /*
-        int streak = 0;
-        Chip currentChip = this.board[this.zeigerX][this.lasty];
-        int x = 2, y = 1;
+        int x_pos = this.lastx, y_pos = this.lasty;
 
-        for(int i = 0; i < 8; i++)
-        {
-            x = x + (-1 * i);
-            y = y + (1 * i);
-            x = Math.clamp(x, 0, 5);
-            x = Math.clamp(y, 0, 4);
-            System.out.println("x: " + x + "\ny: " + y);
-            
+        int[][] directions = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, -1 } };
+        for (int[] direction : directions) {
+            for (int j = -3; j <= 3; j++) {
+                int x = x_pos + (direction[0] * j);
+                int y = y_pos + (direction[1] * j);
+                if (x < 0 || x >= this.board.length || y < 0 || y >= this.board[0].length) {
+                    continue;
+                }
+                if (countFour(x, y, this.board[lastx][lasty])) {
+                    System.out.println("Gewonnen!");
+                    break;
+                }
+            }
+            this.current_streak = 0;
         }
-        */
 
     }
 
-    public void placeChip(Chip player, int pos)
-    {
-        if(pos >= 0 && pos < 6)
-        {
-            if(this.board[pos][0] == Chip.EMPTY)
-            {
+    private boolean countFour(int x, int y, Chip expected) {
+        if (this.board[x][y] == expected) {
+            this.current_streak++;
+        } else {
+            this.current_streak = 0;
+        }
+        if (this.current_streak >= 4) {
+            return true;
+        }
+        return false;
+    }
+
+    private void placeChip(Chip player, int pos) {
+        if (pos >= 0 && pos < this.board.length) {
+            if (this.board[pos][0] == Chip.EMPTY) {
                 this.board[pos][0] = player;
             }
         }
     }
 
-    public static void main(String args[])
-    {
+    public static void main(String args[]) {
         Game game = new Game();
         game.run();
     }
 }
-
