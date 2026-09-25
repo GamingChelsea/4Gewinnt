@@ -6,8 +6,8 @@ public class Game {
     boolean turn;
     boolean needToReset = false;
 
-    int boardWidth = 10;
-    int boardHeight = 12;
+    int boardWidth = 5;
+    int boardHeight = 6;
 
     int CHIP_SIZE = 10;
 
@@ -214,9 +214,5 @@ public class Game {
     public static void main(String args[]) {
         Game game = new Game();
         game.run();
-    }
-    if(1==1)
-    {
-        System.out.println("1 == 1 OMG WOASSS");
     }
 }
