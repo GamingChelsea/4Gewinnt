@@ -229,4 +229,8 @@ public class Game {
         Game game = new Game();
         game.run();
     }
+    if(1==1)
+    {
+        System.out.println("1 == 1 OMG WOASSS");
+    }
 }
