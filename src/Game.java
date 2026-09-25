@@ -4,6 +4,7 @@ import static com.raylib.Raylib.*;
 public class Game {
     Chip[][] board;
     boolean turn;
+    boolean needToReset = false;
 
     int boardWidth = 10;
     int boardHeight = 12;
@@ -41,10 +42,12 @@ public class Game {
         this.init();
 
         while (!WindowShouldClose()) {
-            if (IsKeyPressed(KEY_SPACE)) {
-                this.checkWinner();
+            if (IsKeyPressed(KEY_R)) {
+                this.resetRound();
             }
-
+            if (IsKeyPressed(KEY_E)) {
+                this.resetGame();
+            }
             if (IsKeyPressed(KEY_LEFT)) {
                 this.zeigerX = Math.clamp(this.zeigerX - 1, 0, this.board.length - 1);
             }
@@ -83,6 +86,12 @@ public class Game {
             }
             DrawRectangle(40 * zeigerX, 10, CHIP_SIZE, CHIP_SIZE, BEIGE);
 
+            if (this.needToReset) {
+                ClearBackground(BLACK);
+                DrawText("Press R to reset round", 10, 10, 24, WHITE);
+                DrawText("Press E to reset game", 10, 40, 24, WHITE);
+            }
+
             // Score
             DrawText(Integer.toString(players[0].getWins()), 10, 400, 24, BLUE);
             DrawText(Integer.toString(players[1].getWins()), 10, 450, 24, RED);
@@ -106,9 +115,29 @@ public class Game {
     }
 
     private void resetRound() {
+        for (int y = this.board[0].length - 1; y >= 0; y--) {
+            for (int x = 0; x < this.board.length; x++) {
+                this.board[x][y] = Chip.EMPTY;
+            }
+        }
+        this.turn = false;
+        this.zeigerX = 0;
+        this.dirty = false;
+        this.needToReset = false;
     }
 
     private void resetGame() {
+        for (int y = this.board[0].length - 1; y >= 0; y--) {
+            for (int x = 0; x < this.board.length; x++) {
+                this.board[x][y] = Chip.EMPTY;
+            }
+        }
+        players[0].setWins(0);
+        players[1].setWins(0);
+        this.turn = false;
+        this.zeigerX = 0;
+        this.dirty = false;
+        this.needToReset = false;
     }
 
     private void updateBoard() {
@@ -137,54 +166,6 @@ public class Game {
     }
 
     private void checkWinner() {
-        // int streak = 0;
-        // Chip currentChip = this.board[this.zeigerX][this.lasty];
-        // String playerString = "";
-        // if (currentChip == Chip.PLAYER_1) {
-        // playerString = players[0].getName();
-        // } else if (currentChip == Chip.PLAYER_2) {
-        // playerString = players[1].getName();
-        // }
-        // System.out.println(lasty);
-        // // Horizontal
-        // for (int x = 0; x < this.board.length; x++) {
-        // if (this.board[x][this.lasty] == currentChip) {
-        // streak++;
-        // // System.out.println("CURRENT STREAK" + streak);
-        // } else if (!(streak >= 4)) {
-        // streak = 0;
-        // // System.out.println("STREAK VERLOREN");
-        // }
-        // }
-        // if (streak >= 4) {
-        // System.out.println(playerString + " hat gewonnen!");
-        // if (currentChip == Chip.PLAYER_1) {
-        // players[0].setWins(players[0].getWins() + 1);
-        // } else if (currentChip == Chip.PLAYER_2) {
-        // players[1].setWins(players[1].getWins() + 1);
-        // }
-        // }
-
-        // // Vertical
-        // for (int y = 0; y < this.board[0].length; y++) {
-        // if (this.board[this.lastx][y] == currentChip) {
-        // streak++;
-        // // System.out.println("CURRENT STREAK" + streak);
-        // } else if (!(streak >= 4)) {
-        // streak = 0;
-        // // System.out.println("STREAK VERLOREN");
-        // }
-        // }
-        // if (streak >= 4) {
-        // System.out.println(playerString + " hat gewonnen!");
-        // if (currentChip == Chip.PLAYER_1) {
-        // players[0].setWins(players[0].getWins() + 1);
-        // } else if (currentChip == Chip.PLAYER_2) {
-        // players[1].setWins(players[1].getWins() + 1);
-        // }
-        // }
-
-        // Diagonal
         int x_pos = this.lastx, y_pos = this.lasty;
 
         int[][] directions = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, -1 } };
@@ -197,7 +178,12 @@ public class Game {
                 }
                 if (countFour(x, y, this.board[lastx][lasty])) {
                     System.out.println("Gewonnen!");
-                    break;
+                    if (this.board[lastx][lasty] == Chip.PLAYER_1) {
+                        players[0].setWins(players[0].getWins() + 1);
+                    } else if (this.board[lastx][lasty] == Chip.PLAYER_2) {
+                        players[1].setWins(players[1].getWins() + 1);
+                    }
+                    this.needToReset = true;
                 }
             }
             this.current_streak = 0;
